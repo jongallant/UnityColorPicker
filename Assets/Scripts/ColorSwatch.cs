@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿//Simple class to display a color
+using UnityEngine;
 
 public class ColorSwatch : MonoBehaviour {
 

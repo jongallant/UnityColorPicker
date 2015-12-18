@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿//Example usage of the color picker
+using UnityEngine;
 
 public class Example : MonoBehaviour {
 
-    public ColorPicker ColorPicker;
+    public ColorPickerSimple ColorPicker;
 
     ColorSwatch Selected;
     ColorSwatch Complimentary;
