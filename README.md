@@ -5,10 +5,9 @@ Color picker tools for Unity.
 
 GIF Example (artifacts are because of gif exporter):
 
-http://i.imgur.com/ZpA9DDx.gif
+![Preview](http://i.imgur.com/ZpA9DDx.gif)
 
-
-
+------------------------------------------------------------------------
 
 Copyright (c) 2015 Jon Gallant
 
