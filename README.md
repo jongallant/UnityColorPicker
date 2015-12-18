@@ -1,4 +1,4 @@
-# UnityColorPicker
+# Unity Color Picker
 Color picker tools for Unity.
 
 ![Preview](http://i.imgur.com/e26XGst.png)
