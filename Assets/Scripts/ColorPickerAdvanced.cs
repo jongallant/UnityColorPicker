@@ -4,7 +4,9 @@ using System.Collections.Generic;
 public class ColorPickerAdvanced : MonoBehaviour {
 
     Color[] Data;
-    ColorSwatch Selected;
+    ColorSwatch SelectedColor;
+
+    bool Selected;
 
     public float H, S, B;
     public Color Color;
@@ -35,7 +37,7 @@ public class ColorPickerAdvanced : MonoBehaviour {
         Camera = Camera.main;
         ControlManager = new ControlManager();
 
-        Selected = transform.Find("SelectedColor").GetComponent<ColorSwatch>();
+        SelectedColor = transform.Find("SelectedColor").GetComponent<ColorSwatch>();
 
         TextureBuffer = new Texture2D(TextureSize, TextureSize, TextureFormat.ARGB32, false);
         TextureBuffer.filterMode = FilterMode.Point;
@@ -81,13 +83,10 @@ public class ColorPickerAdvanced : MonoBehaviour {
     void Update()
     {
         ControlManager.Update();
-        
-        if (Input.GetMouseButton(0))
+               
+        if (Input.GetMouseButtonDown(0))
         {
             Vector3 screenPos = Camera.ScreenToWorldPoint(Input.mousePosition);
-            screenPos = new Vector2(screenPos.x, screenPos.y);
-            
-            //check if we clicked this picker control
             int hitCount = Physics2D.RaycastNonAlloc(screenPos, Vector2.zero, HitsBuffer, 0.01f);
 
             for (int i = 0; i < hitCount; i++)
@@ -95,24 +94,43 @@ public class ColorPickerAdvanced : MonoBehaviour {
                 //Did we click the colorpicker?
                 if (HitsBuffer[i].collider == Collider)
                 {
-                    //move selector
-                    Selector.transform.position = screenPos;
-
-                    //get color data
-                    screenPos.x = screenPos.x - ColorPicker.transform.position.x;
-                    screenPos.y = ColorPicker.transform.position.y - screenPos.y;
-
-                    int x = (int)(screenPos.x * TextureSize / transform.localScale.x);
-                    int y = TextureSize - (int)(screenPos.y * TextureSize / transform.localScale.y);
-
-                    if (x > 0 && x < Width && y > 0 && y < Height)
-                    {
-                        UpdateColor(Data[y * Width + x]);             
-                    }
-                    break;
+                    Selected = true;                   
                 }
             }
         }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            Selected = false;
+        }
+
+        if (Selected && Input.GetMouseButton(0))
+        {
+            Vector3 screenPos = Camera.ScreenToWorldPoint(Input.mousePosition);
+            screenPos.z = 0;
+
+            screenPos.x = Mathf.Clamp(screenPos.x, transform.position.x, transform.position.x + transform.localScale.x);
+            screenPos.y = Mathf.Clamp(screenPos.y, transform.position.y - transform.localScale.y, transform.position.y);
+
+            Selector.transform.position = screenPos;
+
+            //get color data
+            screenPos.x = screenPos.x - ColorPicker.transform.position.x;
+            screenPos.y = ColorPicker.transform.position.y - screenPos.y;
+
+            int x = (int)(screenPos.x * TextureSize / transform.localScale.x);
+            int y = TextureSize - (int)(screenPos.y * TextureSize / transform.localScale.y);
+
+            if (x == Width)
+                x -= 1;
+            if (y == Height)
+                y -= 1;
+
+            if (x >= 0 && x < Width && y >= 0 && y < Height)
+            {
+                UpdateColor(Data[y * Width + x]);
+            }
+        }
+       
     }
 
     private void UpdateColor(Color color)
@@ -127,7 +145,7 @@ public class ColorPickerAdvanced : MonoBehaviour {
         S = hsbColor.s;
         B = hsbColor.b;
 
-        Selected.Color = Color;
+        SelectedColor.Color = Color;
     }
 
     private void UpdateColor(HSBColor color)

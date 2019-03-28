@@ -3,6 +3,7 @@
 public class ColorPickerSimple : MonoBehaviour
 {    
     Color[] Data;
+    bool Selected;
 
     SpriteRenderer SpriteRenderer;
     GameObject ColorPicker;
@@ -13,8 +14,13 @@ public class ColorPickerSimple : MonoBehaviour
     public int Height { get { return SpriteRenderer.sprite.texture.height; } }
 
     public Color Color;
+    Camera Camera;
+
+    RaycastHit2D[] HitsBuffer = new RaycastHit2D[1];
 
     void Awake () {
+
+        Camera = Camera.main;
 
         ColorPicker = transform.Find("ColorPicker").gameObject;
         SpriteRenderer = ColorPicker.GetComponent<SpriteRenderer> ();		
@@ -29,34 +35,51 @@ public class ColorPickerSimple : MonoBehaviour
   
     void Update () {
 
-		if (Input.GetMouseButton (0)) {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 screenPos = Camera.ScreenToWorldPoint(Input.mousePosition);
+            int hitCount = Physics2D.RaycastNonAlloc(screenPos, Vector2.zero, HitsBuffer, 0.01f);
 
-			Vector3 screenPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);    
-			screenPos = new Vector2(screenPos.x, screenPos.y);
-
-            //check if we clicked this picker control
-            RaycastHit2D[] ray = Physics2D.RaycastAll(screenPos, Vector2.zero, 0.01f);
-            for (int i = 0; i < ray.Length; i++)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (ray[i].collider == Collider)
-                {                    
-                    //move selector
-                    Selector.transform.position = screenPos;
-
-                    //get color data
-                    screenPos -= ColorPicker.transform.position;
-                    int x = (int)(screenPos.x * Width);
-                    int y = (int)(screenPos.y * Height) + Height;
-
-                    if (x > 0 && x < Width && y > 0 && y < Height)
-                    {
-                        Color = Data[y * Width + x];
-                    }                   
-                    break;
+                if (HitsBuffer[i].collider == Collider)
+                {
+                    Selected = true;
                 }
             }
-          
-		}       
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            Selected = false;
+        }
+
+        if (Selected && Input.GetMouseButton(0))
+        {
+            Vector3 screenPos = Camera.ScreenToWorldPoint(Input.mousePosition);
+            screenPos.z = 0;
+
+            screenPos.x = Mathf.Clamp(screenPos.x, transform.position.x, transform.position.x + transform.localScale.x);
+            screenPos.y = Mathf.Clamp(screenPos.y, transform.position.y - transform.localScale.y, transform.position.y);
+
+            Selector.transform.position = screenPos;
+
+            //get color data
+            screenPos.x = screenPos.x - ColorPicker.transform.position.x;
+            screenPos.y = ColorPicker.transform.position.y - screenPos.y;
+
+            int x = (int)(screenPos.x * Width / transform.localScale.x);
+            int y = Height - (int)(screenPos.y * Height / transform.localScale.y);
+
+            if (x == Width)
+                x -= 1;
+            if (y == Height)
+                y -= 1;
+
+            if (x >= 0 && x < Width && y >= 0 && y < Height)
+            {
+                Color = Data[y * Width + x];
+            }
+        }     
 	}
 
 }
