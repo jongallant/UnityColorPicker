@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class ColorPickerAdvanced : MonoBehaviour {
 
     Color[] Data;
+    ColorSwatch Selected;
 
     public float H, S, B;
     public Color Color;
@@ -33,7 +34,9 @@ public class ColorPickerAdvanced : MonoBehaviour {
 
         Camera = Camera.main;
         ControlManager = new ControlManager();
-                
+
+        Selected = transform.Find("SelectedColor").GetComponent<ColorSwatch>();
+
         TextureBuffer = new Texture2D(TextureSize, TextureSize, TextureFormat.ARGB32, false);
         TextureBuffer.filterMode = FilterMode.Point;
 
@@ -46,18 +49,27 @@ public class ColorPickerAdvanced : MonoBehaviour {
         Selector = transform.Find("Selector").gameObject;
         Collider = ColorPicker.GetComponent<BoxCollider2D>();
 
-        CreateHSBTexture(SliderValueToHSBColor());
+        CreateHSBTexture(SliderValueToHSBColor(true));
     }
 
     //Return color based on slider position
-    private HSBColor SliderValueToHSBColor()
-    {
-        return new HSBColor(SpectrumSlider.Value, 1, 1, 1);
+    private HSBColor SliderValueToHSBColor(bool init = false)
+    {        
+        if (init)
+        {
+            return new HSBColor(SpectrumSlider.Value, 1, 1, 1);
+        }
+        else
+        {
+            Color sample = SampleSelector();
+            return new HSBColor(SpectrumSlider.Value, sample.g, sample.b, sample.a);
+        }        
     }
 
     private void SpectrumSlider_OnSubmit()
     {
         HSBColor color = SliderValueToHSBColor();
+        
         CreateHSBTexture(color);
 
         color.s = S;
@@ -93,9 +105,6 @@ public class ColorPickerAdvanced : MonoBehaviour {
                     int x = (int)(screenPos.x * TextureSize / transform.localScale.x);
                     int y = TextureSize - (int)(screenPos.y * TextureSize / transform.localScale.y);
 
-                    X = x;
-                    Y = y;
-
                     if (x > 0 && x < Width && y > 0 && y < Height)
                     {
                         UpdateColor(Data[y * Width + x]);             
@@ -105,8 +114,6 @@ public class ColorPickerAdvanced : MonoBehaviour {
             }
         }
     }
-
-    public int X, Y;
 
     private void UpdateColor(Color color)
     {
@@ -119,18 +126,14 @@ public class ColorPickerAdvanced : MonoBehaviour {
         H = hsbColor.h;
         S = hsbColor.s;
         B = hsbColor.b;
+
+        Selected.Color = Color;
     }
 
     private void UpdateColor(HSBColor color)
     {
         Color = color.ToColor();
-
-        // Remove this to reduce garbage.
-        Hex = ColorToHex(Color);
-
-        H = color.h;
-        S = color.s;
-        B = color.b;
+        UpdateColor(Color);
     }
 
     //Returns color selector is currently resting on
@@ -170,16 +173,17 @@ public class ColorPickerAdvanced : MonoBehaviour {
         {
             //create this texture.
             Color[] textureData = new Color[TextureSize * TextureSize];
-            color.s = 0;
-            color.b = 1;
+            HSBColor temp = new HSBColor(color.ToColor());
+            temp.s = 0;
+            temp.b = 1;
 
             for (int x = 0; x < TextureSize; x++)
             {
                 for (int y = 0; y < TextureSize; y++)
                 {
-                    color.s = Mathf.Clamp(x / (float)(TextureSize - 1), 0, 1);
-                    color.b = Mathf.Clamp(y / (float)(TextureSize - 1), 0, 1);
-                    textureData[x + y * TextureSize] = color.ToColor();
+                    temp.s = Mathf.Clamp(x / (float)(TextureSize - 1), 0, 1);
+                    temp.b = Mathf.Clamp(y / (float)(TextureSize - 1), 0, 1);
+                    textureData[x + y * TextureSize] = temp.ToColor();
                 }
             }
 

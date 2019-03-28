@@ -5,6 +5,7 @@ public class Example : MonoBehaviour {
 
     public ColorPickerSimple ColorPicker;
 
+
     ColorSwatch Selected;
     ColorSwatch Complimentary;
     ColorSwatch Triad1;
