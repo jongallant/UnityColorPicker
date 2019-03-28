@@ -15,9 +15,10 @@ public class Slider : BaseControl
     private GameObject Background;
     private GameObject Knob;
     private float MaxExtent;
-    private BoxCollider2D BoxCollider;
     private float Min, Max;
     private float NormalizedValue;
+
+    Camera Camera;
 
     void Awake () {
         FindGameObjects();
@@ -26,16 +27,16 @@ public class Slider : BaseControl
 
     private void FindGameObjects()
     {
+        Camera = Camera.main;
         Background = transform.Find("Background").gameObject;
         Knob = transform.Find("Knob").gameObject;
-        BoxCollider = GetComponent<BoxCollider2D>();
     }
 
     void Update () {      
                           
         if (Pressed)
         {
-            Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector2 pos = Camera.ScreenToWorldPoint(Input.mousePosition);
             pos -= Offset;
             SetKnobPosition(pos.y);
             Submit();
@@ -50,8 +51,7 @@ public class Slider : BaseControl
 
     public override void Submit()
     {
-        if (OnSubmit != null)
-            OnSubmit();
+        OnSubmit?.Invoke();
     }
 
     public override void Refresh()
@@ -77,7 +77,6 @@ public class Slider : BaseControl
         }
 
         Value = NormalizedValue * (MaxValue - MinValue);
-        BoxCollider.offset = Knob.transform.localPosition;
     }
 
     private void SetKnobPosition(float position)
@@ -86,8 +85,6 @@ public class Slider : BaseControl
         
         NormalizedValue = (Knob.transform.position.y - Offset.y + MaxExtent) / MaxExtent / 2f;
         Value = NormalizedValue * (MaxValue - MinValue);
-
-        BoxCollider.offset = Knob.transform.localPosition;
     }
     
     protected float CalculatePixelUnits(Sprite sprite)

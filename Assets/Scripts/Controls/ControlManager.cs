@@ -6,13 +6,18 @@ public class ControlManager {
     BaseControl SelectedControl;
     public List<BaseControl> Controls;
 
+    Camera Camera;
+    RaycastHit2D[] HitsBuffer = new RaycastHit2D[1];
+    BaseControl ControlBuffer;
+
     public ControlManager()
     {
         GetControls();
     }
 
     private void GetControls()
-    {
+    {       
+        Camera = Camera.main;
         Controls = new List<BaseControl>();
 
         GameObject[] temp = GameObject.FindGameObjectsWithTag("Slider");
@@ -21,9 +26,7 @@ public class ControlManager {
         {
             for (int n = 0; n < temp.Length; n++)
             {
-                Slider slider = temp[n].GetComponent<Slider>();
-                if (!Controls.Contains(slider))
-                    Controls.Add(slider);
+                Controls.Add(temp[n].GetComponent<Slider>());
             }
         }
     }
@@ -32,15 +35,15 @@ public class ControlManager {
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(pos, new Vector2(0, 0), 0.01f);
+            Vector2 pos = Camera.ScreenToWorldPoint(Input.mousePosition);
+            int hitCount = Physics2D.RaycastNonAlloc(pos, new Vector2(0, 0), HitsBuffer, 0.01f);
 
-            for (int i = 0; i < hits.Length; i++)
+            for (int i = 0; i < hitCount; i++)
             {
-                BaseControl control = CheckCollider(hits[i].collider);
-                if (control != null)
+                ControlBuffer = CheckCollider(HitsBuffer[i].collider);
+                if (ControlBuffer != null)
                 {
-                    SelectedControl = hits[i].collider.gameObject.GetComponent<BaseControl>();
+                    SelectedControl = ControlBuffer;
                     SelectedControl.Select(pos);
                 }                
             }
@@ -48,15 +51,15 @@ public class ControlManager {
 
         if (Input.GetMouseButtonUp(0))
         {
-            Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RaycastHit2D[] hits = Physics2D.RaycastAll(pos, new Vector2(0, 0), 0.01f);
+            Vector2 pos = Camera.ScreenToWorldPoint(Input.mousePosition);
+            int hitCount = Physics2D.RaycastNonAlloc(pos, new Vector2(0, 0), HitsBuffer, 0.01f);
 
-            for (int i = 0; i < hits.Length; i++)
+            for (int i = 0; i < hitCount; i++)
             {
-                BaseControl control = CheckCollider(hits[i].collider);
-                if (control != null)
+                ControlBuffer = CheckCollider(HitsBuffer[i].collider);
+                if (ControlBuffer != null)
                 {
-                    control.Submit();
+                    ControlBuffer.Submit();
                 }
             }
 
@@ -65,10 +68,7 @@ public class ControlManager {
                 SelectedControl.Reset();
                 SelectedControl = null;
             }
-
         }
-
-
     }
     
     private BaseControl CheckCollider(Collider2D collider)

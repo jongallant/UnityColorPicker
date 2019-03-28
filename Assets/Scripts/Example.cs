@@ -1,4 +1,4 @@
-﻿//Example usage of the color picker
+﻿//Example usage of the color picker (Color Picker Simple)
 using UnityEngine;
 
 public class Example : MonoBehaviour {
@@ -19,29 +19,37 @@ public class Example : MonoBehaviour {
 	
 	void Update () {
 
-        Selected.Color = ColorPicker.Color;
-
-        HSBColor hColor = new HSBColor(ColorPicker.Color);       
-
-        if (hColor.h <= 0.5f)
-            Complimentary.Color = new HSBColor(hColor.h + 0.5f, hColor.s, hColor.b).ToColor();
-        else
-            Complimentary.Color = new HSBColor(hColor.h - 0.5f, hColor.s, hColor.b).ToColor();
-
-        if (hColor.h <= 0.33f)
+        if (Selected.Color != ColorPicker.Color)
         {
-            Triad1.Color = new HSBColor(hColor.h + 0.33f, hColor.s, hColor.b).ToColor();
-            Triad2.Color = new HSBColor(hColor.h + 0.66f, hColor.s, hColor.b).ToColor();
+            //Update sample color swatches
+            Selected.Color = ColorPicker.Color;
+            HSBColor hColor = new HSBColor(ColorPicker.Color);
+
+            if (hColor.h <= 0.5f)
+            {
+                Complimentary.Color = new HSBColor(hColor.h + 0.5f, hColor.s, hColor.b).ToColor();
+            }
+            else
+            {
+                Complimentary.Color = new HSBColor(hColor.h - 0.5f, hColor.s, hColor.b).ToColor();
+            }
+
+            if (hColor.h <= 0.33f)
+            {
+                Triad1.Color = new HSBColor(hColor.h + 0.33f, hColor.s, hColor.b).ToColor();
+                Triad2.Color = new HSBColor(hColor.h + 0.66f, hColor.s, hColor.b).ToColor();
+            }
+            else if (hColor.h <= 0.66f)
+            {
+                Triad1.Color = new HSBColor(hColor.h - 0.33f, hColor.s, hColor.b).ToColor();
+                Triad2.Color = new HSBColor(hColor.h + 0.33f, hColor.s, hColor.b).ToColor();
+            }
+            else
+            {
+                Triad1.Color = new HSBColor(hColor.h - 0.33f, hColor.s, hColor.b).ToColor();
+                Triad2.Color = new HSBColor(hColor.h - 0.66f, hColor.s, hColor.b).ToColor();
+            }
         }
-        else if (hColor.h <= 0.66f)
-        {
-            Triad1.Color = new HSBColor(hColor.h - 0.33f, hColor.s, hColor.b).ToColor();
-            Triad2.Color = new HSBColor(hColor.h + 0.33f, hColor.s, hColor.b).ToColor();
-        }
-        else
-        {
-            Triad1.Color = new HSBColor(hColor.h - 0.33f, hColor.s, hColor.b).ToColor();
-            Triad2.Color = new HSBColor(hColor.h - 0.66f, hColor.s, hColor.b).ToColor();
-        }
+        
     }
 }

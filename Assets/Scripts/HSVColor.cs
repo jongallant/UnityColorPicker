@@ -185,34 +185,4 @@ public struct HSBColor
 		}
 		return new HSBColor(h, s, Mathf.Lerp(a.b, b.b, t), Mathf.Lerp(a.a, b.a, t));
 	}
-	
-	public static void Test()
-	{
-		HSBColor color;
-		
-		color = new HSBColor(Color.red);
-		Debug.Log("red: " + color);
-		
-		color = new HSBColor(Color.green);
-		Debug.Log("green: " + color);
-		
-		color = new HSBColor(Color.blue);
-		Debug.Log("blue: " + color);
-		
-		color = new HSBColor(Color.grey);
-		Debug.Log("grey: " + color);
-		
-		color = new HSBColor(Color.white);
-		Debug.Log("white: " + color);
-		
-		color = new HSBColor(new Color(0.4f, 1f, 0.84f, 1f));
-		Debug.Log("0.4, 1f, 0.84: " + color);
-		
-		Debug.Log("164,82,84   .... 0.643137f, 0.321568f, 0.329411f  :" + ToColor(new HSBColor(new Color(0.643137f, 0.321568f, 0.329411f))));
-	}
-
-
-
-
-
 }

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class ColorPickerAdvanced : MonoBehaviour {
 
@@ -19,10 +20,22 @@ public class ColorPickerAdvanced : MonoBehaviour {
     GameObject ColorPicker;
     GameObject Selector;
     BoxCollider2D Collider;
+       
+    Dictionary<HSBColor, TextureData> TextureCache = new Dictionary<HSBColor, TextureData>();
+    Texture2D TextureBuffer;
+
+    RaycastHit2D[] HitsBuffer = new RaycastHit2D[1];
+    Camera Camera;
+
+    int TextureSize = 256;
 
     void Start () {
 
+        Camera = Camera.main;
         ControlManager = new ControlManager();
+                
+        TextureBuffer = new Texture2D(TextureSize, TextureSize, TextureFormat.ARGB32, false);
+        TextureBuffer.filterMode = FilterMode.Point;
 
         ColorPicker = transform.Find("ColorPicker").gameObject;
         SpriteRenderer = ColorPicker.GetComponent<SpriteRenderer>();
@@ -59,22 +72,29 @@ public class ColorPickerAdvanced : MonoBehaviour {
         
         if (Input.GetMouseButton(0))
         {
-            Vector3 screenPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            Vector3 screenPos = Camera.ScreenToWorldPoint(Input.mousePosition);
             screenPos = new Vector2(screenPos.x, screenPos.y);
-
+            
             //check if we clicked this picker control
-            RaycastHit2D[] ray = Physics2D.RaycastAll(screenPos, Vector2.zero, 0.01f);
-            for (int i = 0; i < ray.Length; i++)
+            int hitCount = Physics2D.RaycastNonAlloc(screenPos, Vector2.zero, HitsBuffer, 0.01f);
+
+            for (int i = 0; i < hitCount; i++)
             {
-                if (ray[i].collider == Collider)
+                //Did we click the colorpicker?
+                if (HitsBuffer[i].collider == Collider)
                 {
                     //move selector
                     Selector.transform.position = screenPos;
 
                     //get color data
-                    screenPos -= ColorPicker.transform.position;
-                    int x = (int)(screenPos.x * Width);
-                    int y = (int)(screenPos.y * Height) + Height;
+                    screenPos.x = screenPos.x - ColorPicker.transform.position.x;
+                    screenPos.y = ColorPicker.transform.position.y - screenPos.y;
+
+                    int x = (int)(screenPos.x * TextureSize / transform.localScale.x);
+                    int y = TextureSize - (int)(screenPos.y * TextureSize / transform.localScale.y);
+
+                    X = x;
+                    Y = y;
 
                     if (x > 0 && x < Width && y > 0 && y < Height)
                     {
@@ -86,9 +106,13 @@ public class ColorPickerAdvanced : MonoBehaviour {
         }
     }
 
+    public int X, Y;
+
     private void UpdateColor(Color color)
     {
         Color = color;
+
+        // Remove this to reduce garbage.
         Hex = ColorToHex(Color);
 
         HSBColor hsbColor = new HSBColor(color);
@@ -100,6 +124,8 @@ public class ColorPickerAdvanced : MonoBehaviour {
     private void UpdateColor(HSBColor color)
     {
         Color = color.ToColor();
+
+        // Remove this to reduce garbage.
         Hex = ColorToHex(Color);
 
         H = color.h;
@@ -124,6 +150,7 @@ public class ColorPickerAdvanced : MonoBehaviour {
     //Converts a color to a hex string
     string ColorToHex(Color32 color)
     {
+        // Creates a lot of garbage -- do not call unless you need to pull this Hex value for saving, etc.       
         string hex = "#" + color.r.ToString("X2") + color.g.ToString("X2") + color.b.ToString("X2");
         return hex;
     }
@@ -131,28 +158,51 @@ public class ColorPickerAdvanced : MonoBehaviour {
     //Generates a 256x256 texture with all variations for the selected HUE
     void CreateHSBTexture(HSBColor color)
     {
-        int size = 256;
-        Texture2D texture = new Texture2D(size, size, TextureFormat.ARGB32, false);
-        texture.filterMode = FilterMode.Point;
-
-        Color[] textureData = new Color[size * size];
-        color.s = 0;
-        color.b = 1;
-
-        for (int x = 0; x < size; x++)
+        //Already cached this texture so let's re=use it
+        if (TextureCache.ContainsKey(color))
         {
-            for (int y = 0; y < size; y++)
-            {
-                color.s = Mathf.Clamp(x / (float)(size - 1), 0, 1);
-                color.b = Mathf.Clamp(y / (float)(size - 1), 0, 1);
-                textureData[x + y * size] = color.ToColor();
-            }
+            TextureData data = TextureCache[color];
+
+            SpriteRenderer.sprite = data.Sprite;
+            Data = data.ColorData;
         }
+        else
+        {
+            //create this texture.
+            Color[] textureData = new Color[TextureSize * TextureSize];
+            color.s = 0;
+            color.b = 1;
 
-        texture.SetPixels(textureData);
-        texture.Apply();
+            for (int x = 0; x < TextureSize; x++)
+            {
+                for (int y = 0; y < TextureSize; y++)
+                {
+                    color.s = Mathf.Clamp(x / (float)(TextureSize - 1), 0, 1);
+                    color.b = Mathf.Clamp(y / (float)(TextureSize - 1), 0, 1);
+                    textureData[x + y * TextureSize] = color.ToColor();
+                }
+            }
 
-        SpriteRenderer.sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(0f, 1f), 233);
-        Data = textureData;
+            TextureBuffer.SetPixels(textureData);
+            TextureBuffer.Apply();
+
+            SpriteRenderer.sprite = Sprite.Create(TextureBuffer, new Rect(0, 0, TextureSize, TextureSize), new Vector2(0f, 1f), TextureSize);
+            Data = textureData;
+
+            //store in cache
+            TextureCache.Add(color, new TextureData(Data, SpriteRenderer.sprite));
+        }
+    }
+}
+
+public struct TextureData
+{
+    public Color[] ColorData;
+    public Sprite Sprite;
+
+    public TextureData(Color[] colorData, Sprite sprite)
+    {
+        ColorData = colorData;
+        Sprite = sprite;
     }
 }

@@ -1,10 +1,10 @@
 ﻿using UnityEngine;
 
-public class ColorPickerSimple : MonoBehaviour {
-
+public class ColorPickerSimple : MonoBehaviour
+{    
     Color[] Data;
-    SpriteRenderer SpriteRenderer;
 
+    SpriteRenderer SpriteRenderer;
     GameObject ColorPicker;
     GameObject Selector;
     BoxCollider2D Collider;
